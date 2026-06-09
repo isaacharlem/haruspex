@@ -13,4 +13,4 @@ One line per decision the build brief left open. Newest at the bottom.
 - Frontend never uses the HTML `placeholder` attribute (the placeholder audit greps for the word); inputs get visible labels or hints instead.
 - Single dark theme only; it is an instrument (per §13.2).
 - Compose publishes Postgres on host port 55432 (not 5432) so `make demo` never collides with a host-local Postgres; in-network services still use `db:5432`.
-- macOS note: uv marks `.venv` UF_HIDDEN and CPython >= 3.12.13 skips hidden `.pth` files, breaking editable imports; run `chflags -R nohidden .venv` once after venv creation (Linux/CI/Docker unaffected).
+- macOS note: uv re-marks `.venv` UF_HIDDEN on every install and CPython >= 3.12.13 skips hidden `.pth` files, breaking editable imports; tests sidestep it via pytest `pythonpath = ["src"]`, runtime make targets depend on `fix-venv` (`chflags -R nohidden .venv`, no-op elsewhere). Linux/CI/Docker unaffected.

@@ -29,6 +29,12 @@ help:
 hooks:
 	uv run pre-commit install
 
+# macOS: uv marks the venv UF_HIDDEN on installs and CPython >= 3.12.13 skips
+# hidden .pth files, breaking editable imports for runtime entrypoints
+# (uvicorn, haruspex-simulate, cli). No-op elsewhere.
+fix-venv:
+	@command -v chflags >/dev/null 2>&1 && chflags -R nohidden .venv 2>/dev/null || true
+
 # --- lint / typecheck ----------------------------------------------------------
 
 lint: lint-python lint-frontend
@@ -93,10 +99,10 @@ db-up:
 	@until $(COMPOSE) exec db pg_isready -U haruspex -q 2>/dev/null; do sleep 1; done
 	@echo "db ready on localhost:55432"
 
-migrate: db-up
+migrate: db-up fix-venv
 	cd backend && uv run alembic upgrade head
 
-keys:
+keys: fix-venv
 	cd backend && uv run python -m haruspex_server.cli mint-key --name local-admin --scopes ingest,read,admin
 
 dev: migrate
@@ -115,6 +121,6 @@ clean:
 	rm -rf frontend/dist frontend/coverage frontend/test-results frontend/playwright-report
 	find . -type d -name __pycache__ -not -path './node_modules/*' -not -path './.venv/*' -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: help hooks lint lint-python lint-frontend typecheck typecheck-backend \
+.PHONY: help hooks fix-venv lint lint-python lint-frontend typecheck typecheck-backend \
 	typecheck-sdk typecheck-frontend test test-backend test-sdk test-frontend \
 	build-frontend audit vuln-audit ci db-up migrate keys dev clean

@@ -31,6 +31,9 @@ packages = ["src/haruspex"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Import from src directly: on macOS, uv re-flags the venv UF_HIDDEN on every
+# install and CPython >= 3.12.13 then skips the editable-install .pth files.
+pythonpath = ["src"]
 
 [tool.coverage.run]
 source = ["haruspex"]
@@ -44,3 +47,8 @@ python_version = "3.12"
 mypy_path = "src"
 explicit_package_bases = true
 strict = true
+
+# Optional framework integrations are import-guarded at runtime.
+[[tool.mypy.overrides]]
+module = ["lightning.*", "transformers"]
+ignore_missing_imports = true

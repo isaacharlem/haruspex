@@ -45,6 +45,9 @@ packages = ["src/haruspex_server"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Import from src directly: on macOS, uv re-flags the venv UF_HIDDEN on every
+# install and CPython >= 3.12.13 then skips the editable-install .pth files.
+pythonpath = ["src"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
