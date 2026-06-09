@@ -86,6 +86,26 @@ vuln-audit:
 
 ci: lint typecheck test audit
 
+# --- database / ops ----------------------------------------------------------------
+
+db-up:
+	$(COMPOSE) up -d db
+	@until $(COMPOSE) exec db pg_isready -U haruspex -q 2>/dev/null; do sleep 1; done
+	@echo "db ready on localhost:55432"
+
+migrate: db-up
+	cd backend && uv run alembic upgrade head
+
+keys:
+	cd backend && uv run python -m haruspex_server.cli mint-key --name local-admin --scopes ingest,read,admin
+
+dev: migrate
+	@echo "Starting api (:8000), worker, and vite (:5173). Ctrl-C stops all."
+	@trap 'kill 0' INT TERM; \
+	(cd backend && uv run uvicorn --factory haruspex_server.api.app:create_app --reload --port 8000) & \
+	pnpm -C frontend run dev & \
+	wait
+
 # --- housekeeping -----------------------------------------------------------------
 
 clean:
@@ -97,4 +117,4 @@ clean:
 
 .PHONY: help hooks lint lint-python lint-frontend typecheck typecheck-backend \
 	typecheck-sdk typecheck-frontend test test-backend test-sdk test-frontend \
-	build-frontend audit vuln-audit ci clean
+	build-frontend audit vuln-audit ci db-up migrate keys dev clean
