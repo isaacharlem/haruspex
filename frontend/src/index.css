@@ -1,0 +1,32 @@
+@import 'tailwindcss';
+
+/* Haruspex design tokens — bronze-age divination meets flight telemetry.
+   Everything derives from these variables; see frontend/DESIGN.md. */
+:root {
+  --ink: #14110c;
+  --bone: #e9e3d3;
+  --parchment: #b9af99;
+  --bronze: #8a6f3f;
+  --verdigris: #4e8f7b;
+  --ochre: #c9912e;
+  --oxblood: #a23b2e;
+}
+
+@theme {
+  --color-ink: #14110c;
+  --color-bone: #e9e3d3;
+  --color-parchment: #b9af99;
+  --color-bronze: #8a6f3f;
+  --color-verdigris: #4e8f7b;
+  --color-ochre: #c9912e;
+  --color-oxblood: #a23b2e;
+  --font-display: 'Fraunces Variable', 'Georgia', serif;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+html {
+  background-color: var(--ink);
+  color: var(--bone);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}

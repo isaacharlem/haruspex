@@ -1,0 +1,24 @@
+[tool.uv.workspace]
+members = ["backend", "sdk"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["backend/src", "sdk/src"]
+extend-exclude = ["backend/src/haruspex_server/db/migrations/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "C4",  # comprehensions
+    "SIM", # simplify
+    "RUF", # ruff-specific
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["haruspex", "haruspex_server"]
