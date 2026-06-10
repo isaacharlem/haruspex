@@ -1,4 +1,5 @@
-// Polite toast stack, bottom-left, four max, auto-dismissing.
+// Polite toast stack, bottom-left, four max. Routine toasts fade; kill
+// notifications stay until clicked.
 
 import { useUiStore } from '../state/uiStore'
 

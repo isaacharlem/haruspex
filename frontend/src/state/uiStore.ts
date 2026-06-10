@@ -27,9 +27,12 @@ export const useUiStore = create<UiState>((set) => ({
   pushToast: (message, tone = 'info') => {
     const id = nextToastId++
     set((state) => ({ toasts: [...state.toasts.slice(-3), { id, message, tone }] }))
-    setTimeout(() => {
-      set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }))
-    }, 6000)
+    // Kill notifications stay until dismissed; routine toasts fade.
+    if (tone !== 'kill') {
+      setTimeout(() => {
+        set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }))
+      }, 6000)
+    }
   },
   dismissToast: (id) =>
     set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
