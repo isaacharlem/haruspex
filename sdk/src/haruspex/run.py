@@ -230,7 +230,14 @@ class Run:
     def _schedule_retry(self, now: float, exc: HaruspexError) -> None:
         self._retry_at = now + self._backoff(self._send_attempt)
         self._send_attempt += 1
-        logger.warning("haruspex ingest failed (%s); retrying with backoff", exc)
+        # Sustained throttling/outages would otherwise flood the log: warn on
+        # the first failure and every tenth retry after that.
+        if self._send_attempt == 1 or self._send_attempt % 10 == 0:
+            logger.warning(
+                "haruspex ingest failed (%s); retrying with backoff (attempt %s)",
+                exc,
+                self._send_attempt,
+            )
 
     def _heartbeat(self, now: float) -> None:
         assert self.run_id is not None

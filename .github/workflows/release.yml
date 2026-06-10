@@ -1,0 +1,46 @@
+# Release pipeline — BUILD-ONLY by choice (recorded in DECISIONS.md):
+# images are built but not pushed to a registry, and the SDK wheel/sdist are
+# attached to the GitHub Release. The PyPI publish step is strictly gated on a
+# PYPI_API_TOKEN secret existing; without it the step is skipped.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build api image
+        run: docker build -f deploy/Dockerfile.backend --target api -t haruspex-api:${{ github.ref_name }} .
+      - name: Build worker image
+        run: docker build -f deploy/Dockerfile.backend --target worker -t haruspex-worker:${{ github.ref_name }} .
+      - name: Build frontend image
+        run: docker build -f deploy/Dockerfile.frontend --target frontend -t haruspex-frontend:${{ github.ref_name }} .
+
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build wheel and sdist
+        run: uv build --package haruspex --out-dir dist
+      - name: Attach artifacts to the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" --generate-notes --verify-tag || true
+          gh release upload "${{ github.ref_name }}" dist/* --clobber
+      - name: Publish to PyPI (only when a token is configured)
+        if: ${{ env.PYPI_TOKEN_SET == 'true' }}
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish dist/*
+    env:
+      PYPI_TOKEN_SET: ${{ secrets.PYPI_API_TOKEN != '' }}

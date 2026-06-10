@@ -179,7 +179,10 @@ def _advance(run: _LiveRun, now: float) -> None:
         if not math.isfinite(loss):
             run.nan_steps += 1
         run.step += 1
-        if run.nan_steps >= 10 or run.step >= generated.n_steps:
+        # A diverged trainer lingers on NaNs long enough for a kill policy to
+        # act (3 sustained evals + grace); it self-reports diverged only if no
+        # policy stops it first.
+        if run.nan_steps >= 150 or run.step >= generated.n_steps:
             status = generated.final_status
             run.handle.finish(status=status, final={"loss": generated.final_loss})
             run.done = True

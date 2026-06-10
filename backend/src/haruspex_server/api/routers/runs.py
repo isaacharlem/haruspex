@@ -33,7 +33,11 @@ from haruspex_server.services import runs as runs_service
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
-IngestAuth = Annotated[AuthedKey, Depends(require("ingest", rate_class="ingest"))]
+# Run-lifecycle endpoints need the ingest *scope* but bill the default rate
+# class: the pinned 120 req/min ingest budget is for metric batches
+# (POST /v1/ingest), and heartbeats sharing it would starve kill directives
+# under throttling (see DECISIONS.md).
+IngestAuth = Annotated[AuthedKey, Depends(require("ingest"))]
 ReadAuth = Annotated[AuthedKey, Depends(require("read"))]
 AdminAuth = Annotated[AuthedKey, Depends(require("admin"))]
 Session = Annotated[AsyncSession, Depends(get_session)]

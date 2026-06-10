@@ -17,13 +17,14 @@ class RunCreate(BaseModel):
     target_metric: str = Field(min_length=1, max_length=100)
     target_value: float
     direction: Literal["min", "max"] = "min"
-    budget_steps: int = Field(gt=0)
-    budget_wallclock_s: int = Field(gt=0)
+    budget_steps: int = Field(gt=0, le=1_000_000_000)
+    budget_wallclock_s: int = Field(gt=0, le=1_000_000_000)
     gpu_type: str = Field(min_length=1, max_length=50)
-    gpu_count: int = Field(ge=1)
+    gpu_count: int = Field(ge=1, le=65_536)
     gpu_hourly_usd: float | None = Field(
         default=None,
         gt=0,
+        le=1_000_000,
         description="Editable estimate; defaults from the documented price table when omitted.",
     )
 
@@ -92,7 +93,7 @@ class RunOut(BaseModel):
 
 
 class HeartbeatRequest(BaseModel):
-    current_step: int = Field(ge=0)
+    current_step: int = Field(ge=0, le=2_000_000_000)
     last_checkpoint_at: datetime | None = None
 
 

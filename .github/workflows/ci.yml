@@ -109,3 +109,67 @@ jobs:
           node-version: 22
       - run: pnpm -C frontend install --frozen-lockfile
       - run: make vuln-audit
+
+  contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: haruspex
+          POSTGRES_PASSWORD: haruspex
+          POSTGRES_DB: haruspex
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U haruspex"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --all-packages
+      - run: make contract
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start the stack
+        run: |
+          docker compose -f deploy/docker-compose.yml build
+          docker compose -f deploy/docker-compose.yml up -d db api worker
+      - run: make smoke
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml logs --tail 100
+      - name: Tear down
+        if: always()
+        run: docker compose -f deploy/docker-compose.yml down -v
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm -C frontend install --frozen-lockfile
+      - run: pnpm -C frontend exec playwright install chromium --with-deps
+      - name: Start the full demo
+        run: make demo
+      - run: make e2e
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml --profile demo logs --tail 150
+      - name: Tear down
+        if: always()
+        run: docker compose -f deploy/docker-compose.yml --profile demo down -v

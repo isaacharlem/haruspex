@@ -21,7 +21,7 @@ def _coerce_value(value: object) -> object:
 
 
 class IngestPoint(BaseModel):
-    step: int = Field(ge=0)
+    step: int = Field(ge=0, le=2_000_000_000)
     ts: datetime
     name: str = Field(min_length=1, max_length=100)
     value: Annotated[float, BeforeValidator(_coerce_value)]

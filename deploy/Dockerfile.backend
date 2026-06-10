@@ -1,0 +1,42 @@
+# Backend image: API and worker share one build (different CMD).
+# Build context is the repository root.
+
+FROM python:3.12-slim AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
+COPY pyproject.toml uv.lock ./
+COPY backend/pyproject.toml backend/README.md backend/
+COPY sdk/pyproject.toml sdk/README.md sdk/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --all-packages --frozen --no-install-workspace --no-dev
+COPY backend/src backend/src
+COPY backend/alembic.ini backend/alembic.ini
+COPY sdk/src sdk/src
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --all-packages --frozen --no-dev --no-editable
+
+FROM python:3.12-slim AS runtime
+RUN apt-get update -q \
+    && apt-get install -y -q --no-install-recommends curl procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 haruspex
+WORKDIR /app
+COPY --from=builder --chown=haruspex:haruspex /app/.venv /app/.venv
+COPY --chown=haruspex:haruspex backend/alembic.ini /app/backend/alembic.ini
+COPY --chown=haruspex:haruspex backend/src /app/backend/src
+COPY --chown=haruspex:haruspex scripts/demo_seed.py /app/scripts/demo_seed.py
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
+USER haruspex
+
+FROM runtime AS api
+EXPOSE 8000
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=6 \
+    CMD curl -fsS http://localhost:8000/healthz || exit 1
+# Migrations run on boot: single-tenant, one writer, boring and reliable.
+CMD ["sh", "-c", "cd /app/backend && alembic upgrade head && uvicorn --factory haruspex_server.api.app:create_app --host 0.0.0.0 --port 8000 --no-access-log"]
+
+FROM runtime AS worker
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=4 \
+    CMD pgrep -f haruspex_server.worker || exit 1
+CMD ["python", "-m", "haruspex_server.worker"]

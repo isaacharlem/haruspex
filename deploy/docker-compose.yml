@@ -19,5 +19,75 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+      target: api
+    image: haruspex-api
+    environment:
+      HARUSPEX_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-haruspex}:${POSTGRES_PASSWORD:-haruspex}@db:5432/${POSTGRES_DB:-haruspex}
+      HARUSPEX_CORS_ORIGINS: ${HARUSPEX_CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
+      HARUSPEX_LOG_LEVEL: ${HARUSPEX_LOG_LEVEL:-info}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      HARUSPEX_COPILOT_MODEL: ${HARUSPEX_COPILOT_MODEL:-claude-sonnet-4-6}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+      target: worker
+    image: haruspex-worker
+    environment:
+      HARUSPEX_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-haruspex}:${POSTGRES_PASSWORD:-haruspex}@db:5432/${POSTGRES_DB:-haruspex}
+      HARUSPEX_LOG_LEVEL: ${HARUSPEX_LOG_LEVEL:-info}
+      # 5s refit cadence (vs the 15s default) so the demo's compressed
+      # timescale — runs live ~4 minutes — gets timely kills.
+      HARUSPEX_WORKER_INTERVAL_S: ${HARUSPEX_WORKER_INTERVAL_S:-5}
+      HARUSPEX_HEARTBEAT_STALE_S: ${HARUSPEX_HEARTBEAT_STALE_S:-120}
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+      target: frontend
+    image: haruspex-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  demo:
+    profiles: ["demo"]
+    image: haruspex-api
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+      target: api
+    environment:
+      HARUSPEX_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-haruspex}:${POSTGRES_PASSWORD:-haruspex}@db:5432/${POSTGRES_DB:-haruspex}
+      HARUSPEX_API_URL: http://api:8000
+      HARUSPEX_DASHBOARD_URL: http://localhost:8080
+    command: ["python", "/app/scripts/demo_seed.py"]
+    depends_on:
+      api:
+        condition: service_healthy
+      worker:
+        condition: service_started
+      frontend:
+        condition: service_healthy
+    restart: "no"
+
 volumes:
   pgdata:

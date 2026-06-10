@@ -20,6 +20,9 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 COMPOSE := docker compose -f deploy/docker-compose.yml
+# Imports via PYTHONPATH for local (non-container) entrypoints: immune to the
+# macOS uv/UF_HIDDEN editable-install issue (see DECISIONS.md).
+PY_ENV := PYTHONPATH=$(CURDIR)/backend/src:$(CURDIR)/sdk/src
 
 help:
 	@sed -n '2,20p' Makefile
@@ -94,6 +97,39 @@ vuln-audit:
 
 ci: lint typecheck test audit
 
+# --- demo / stack -------------------------------------------------------------------
+
+demo:
+	$(COMPOSE) --profile demo up -d --build
+	@echo "Waiting for the demo seeder to mint a dashboard key..."
+	@key_seen=0; for i in $$(seq 1 60); do \
+		if $(COMPOSE) logs demo 2>/dev/null | grep -q 'DASHBOARD KEY:'; then key_seen=1; break; fi; \
+		sleep 2; done; \
+	if [ $$key_seen -eq 1 ]; then \
+		$(COMPOSE) logs --no-log-prefix demo | sed -n '/HARUSPEX DEMO/,/^=*$$/p' | head -20; \
+		echo ""; \
+		echo "Follow the live runs: $(COMPOSE) logs -f demo"; \
+	else \
+		echo "Demo seeder did not report a key yet; check: $(COMPOSE) logs demo"; \
+	fi
+
+stack-up:
+	$(COMPOSE) up -d --build db api worker frontend
+
+stack-down:
+	$(COMPOSE) --profile demo down
+
+smoke:
+	./scripts/smoke.sh
+
+contract:
+	./scripts/contract.sh
+
+e2e:
+	@KEY=$$($(COMPOSE) logs --no-log-prefix demo 2>/dev/null | grep 'DASHBOARD KEY:' | tail -1 | awk '{print $$NF}'); \
+	if [ -z "$$KEY" ]; then echo "e2e needs the demo running: make demo"; exit 1; fi; \
+	E2E_API_KEY=$$KEY pnpm -C frontend exec playwright test
+
 # --- database / ops ----------------------------------------------------------------
 
 db-up:
@@ -105,12 +141,13 @@ migrate: db-up fix-venv
 	cd backend && uv run alembic upgrade head
 
 keys: fix-venv
-	cd backend && uv run python -m haruspex_server.cli mint-key --name local-admin --scopes ingest,read,admin
+	cd backend && $(PY_ENV) uv run python -m haruspex_server.cli mint-key --name local-admin --scopes ingest,read,admin
 
 dev: migrate
 	@echo "Starting api (:8000), worker, and vite (:5173). Ctrl-C stops all."
 	@trap 'kill 0' INT TERM; \
-	(cd backend && uv run uvicorn --factory haruspex_server.api.app:create_app --reload --port 8000) & \
+	(cd backend && $(PY_ENV) uv run uvicorn --factory haruspex_server.api.app:create_app --reload --port 8000) & \
+	(cd backend && $(PY_ENV) uv run python -m haruspex_server.worker) & \
 	pnpm -C frontend run dev & \
 	wait
 
@@ -125,4 +162,5 @@ clean:
 
 .PHONY: help hooks fix-venv lint lint-python lint-frontend typecheck typecheck-backend \
 	typecheck-sdk typecheck-frontend test test-backend test-sdk test-frontend \
-	build-frontend audit vuln-audit ci db-up migrate keys dev clean
+	build-frontend audit vuln-audit ci demo stack-up stack-down smoke contract e2e \
+	db-up migrate keys dev clean
