@@ -19,10 +19,12 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-# --project-directory . makes compose read the repo-root .env for
-# ${VAR} interpolation (ANTHROPIC_API_KEY etc.); by default it would look
-# for deploy/.env and silently find nothing.
-COMPOSE := docker compose --project-directory . -f deploy/docker-compose.yml
+# Compose interpolates ${VAR}s from the repo-root .env (when present) via an
+# explicit --env-file; by default it would look for deploy/.env and silently
+# find nothing. --project-directory is NOT used: it would re-anchor the
+# compose file's relative build contexts and break image builds.
+COMPOSE_ENV := $(if $(wildcard .env),--env-file .env,)
+COMPOSE := docker compose $(COMPOSE_ENV) -f deploy/docker-compose.yml
 # Imports via PYTHONPATH for local (non-container) entrypoints: immune to the
 # macOS uv/UF_HIDDEN editable-install issue (see DECISIONS.md).
 PY_ENV := PYTHONPATH=$(CURDIR)/backend/src:$(CURDIR)/sdk/src

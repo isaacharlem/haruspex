@@ -10,6 +10,7 @@
   --parchment: #b9af99;
   --bronze: #8a6f3f;
   --bronze-faint: rgba(138, 111, 63, 0.35);
+  --bronze-ghost: rgba(138, 111, 63, 0.14);
   --verdigris: #4e8f7b;
   --ochre: #c9912e;
   --oxblood: #a23b2e;
@@ -38,8 +39,20 @@ html {
   font-size: 14px;
 }
 
+/* The room the instruments live in: a barely-there grain over the ink, and
+   two faint atmospheric glows (bronze from above, verdigris from below). */
+body {
+  background-color: var(--ink);
+  background-image:
+    radial-gradient(1100px 600px at 75% -10%, rgba(138, 111, 63, 0.06), transparent 60%),
+    radial-gradient(900px 600px at -15% 110%, rgba(78, 143, 123, 0.04), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-attachment: fixed, fixed, fixed;
+}
+
 /* All numbers are data: tabular always. */
-.font-mono {
+.font-mono,
+.font-display {
   font-variant-numeric: tabular-nums;
 }
 
@@ -54,6 +67,82 @@ html {
   color: var(--ink);
 }
 
+/* ---- The tablet: every card is an etched votive plaque ------------------- */
+/* Outer hairline, inner ghost hairline, a whisper of raking light from the
+   top-left. Interactive tablets lift and their edges catch the bronze. */
+.tablet {
+  position: relative;
+  background:
+    linear-gradient(155deg, rgba(233, 227, 211, 0.025), transparent 45%),
+    var(--ink-raised);
+  border: 1px solid var(--bronze-faint);
+}
+.tablet::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--bronze-ghost);
+  pointer-events: none;
+}
+.tablet-link {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.tablet-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--bronze);
+  box-shadow:
+    0 8px 28px -14px rgba(138, 111, 63, 0.45),
+    0 2px 8px -4px rgba(0, 0, 0, 0.6);
+}
+
+/* ---- Section rules: a small ornament, then a fading hairline -------------- */
+.rune-rule {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.rune-rule::before {
+  content: '◆';
+  color: var(--bronze);
+  font-size: 8px;
+  line-height: 1;
+}
+.rune-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--bronze-faint), transparent 85%);
+}
+
+/* Double hairline under page titles — the etched divider. */
+.etched-rule {
+  height: 4px;
+  border-top: 1px solid var(--bronze-faint);
+  border-bottom: 1px solid var(--bronze-ghost);
+}
+
+/* ---- Scrollbars: thin bronze, at home in the ink -------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bronze-faint) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--bronze-faint);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---- Motion ---------------------------------------------------------------- */
 @keyframes comet-pulse {
   0%,
   100% {
@@ -68,9 +157,63 @@ html {
   animation: comet-pulse 2.4s ease-in-out infinite;
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.toast-in {
+  animation: toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+/* Shimmer for loading lines. */
+@keyframes augur-shimmer {
+  0% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.35;
+  }
+}
+.augur-shimmer {
+  animation: augur-shimmer 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .comet-halo {
+  .comet-halo,
+  .augur-shimmer {
     animation: none;
     opacity: 0.8;
+  }
+  .toast-in,
+  .fade-up {
+    animation: none;
+  }
+  .tablet-link,
+  .tablet-link:hover {
+    transition: none;
+    transform: none;
   }
 }

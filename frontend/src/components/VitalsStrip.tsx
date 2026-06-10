@@ -1,16 +1,24 @@
-// Cockpit annunciator row: active runs, fleet burn, recovered to date.
-// One hairline-bounded strip — no stat boxes.
+// Cockpit annunciator plaque: active runs, fleet burn, recovered to date.
+// One etched strip with hairline dividers and display numerals.
 
 import { fmtUsd } from '../lib/format'
 import type { Ledger, Run } from '../lib/types'
 
-function Vital({ label, value }: { label: string; value: string }) {
+function Vital({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="font-body text-[11px] uppercase tracking-[0.08em] text-parchment">
+    <div
+      className="flex min-w-0 flex-col gap-1 border-r px-5 py-3 last:border-r-0 sm:px-7"
+      style={{ borderColor: 'var(--bronze-ghost, rgba(138,111,63,0.14))' }}
+    >
+      <span className="font-body text-[10px] tracking-[0.14em] whitespace-nowrap text-parchment uppercase">
         {label}
       </span>
-      <span className="font-mono text-base text-bone">{value}</span>
+      <span
+        className="truncate font-display text-xl font-medium text-bone"
+        style={accent ? { color: accent } : undefined}
+      >
+        {value}
+      </span>
     </div>
   )
 }
@@ -21,11 +29,12 @@ export function VitalsStrip({ runs, ledger }: { runs: Run[]; ledger: Ledger | un
   const atRisk = live.filter((run) => run.health === 'AT_RISK' || run.health === 'DOOMED').length
 
   return (
-    <div
-      className="flex flex-wrap items-center gap-x-10 gap-y-3 border-y px-1 py-3"
-      style={{ borderColor: 'var(--bronze-faint)' }}
-    >
-      <Vital label="Active runs" value={`${live.length}${atRisk ? ` · ${atRisk} at risk` : ''}`} />
+    <div className="tablet flex flex-wrap items-stretch">
+      <Vital
+        label="Active runs"
+        value={`${live.length}${atRisk ? ` · ${atRisk} at risk` : ''}`}
+        accent={atRisk ? 'var(--ochre)' : undefined}
+      />
       <Vital label="Fleet burn" value={`${fmtUsd(burn)}/hr`} />
       <Vital
         label="Recovered (30d)"

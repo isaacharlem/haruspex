@@ -31,7 +31,7 @@ describe('RunCard status rendering', () => {
     const run = makeRun({ status: 'KILLED', health: null })
     renderWithProviders(<RunCard run={run} />)
     expect(screen.getByText('KILLED')).toBeInTheDocument()
-    expect(screen.getByTestId('run-card').className).toContain('opacity-60')
+    expect(screen.getByTestId('run-card').className).toContain('opacity-65')
   })
 
   test('uncalibrated forecast carries the calibrating mark', () => {

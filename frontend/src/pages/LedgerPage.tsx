@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { EmptyState } from '../components/EmptyState'
 import { LedgerTable } from '../components/LedgerTable'
+import { PageHeader } from '../components/PageHeader'
 import { useLedger } from '../hooks/queries'
 import { fmtUsd } from '../lib/format'
 
@@ -14,45 +15,54 @@ export function LedgerPage() {
   const data = ledger.data
 
   return (
-    <div>
-      <div className="flex items-end justify-between">
-        <h1 className="font-display text-2xl text-bone">Ledger</h1>
-        <div className="flex gap-1" role="group" aria-label="window">
-          {WINDOWS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setWindowDays(option)}
-              className={`border px-2 py-1 font-mono text-xs ${
-                windowDays === option ? 'text-bone' : 'text-parchment hover:text-bone'
-              }`}
-              style={{
-                borderColor: windowDays === option ? 'var(--bronze)' : 'var(--bronze-faint)',
-              }}
-            >
-              {option}d
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="mx-auto max-w-[1100px]">
+      <PageHeader
+        title="Ledger"
+        actions={
+          <div className="flex gap-1" role="group" aria-label="window">
+            {WINDOWS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setWindowDays(option)}
+                className={`border px-2.5 py-1 font-mono text-xs transition-colors ${
+                  windowDays === option ? 'text-bone' : 'text-parchment hover:text-bone'
+                }`}
+                style={{
+                  borderColor: windowDays === option ? 'var(--bronze)' : 'var(--bronze-faint)',
+                }}
+              >
+                {option}d
+              </button>
+            ))}
+          </div>
+        }
+      />
 
-      <div
-        className="mt-4 flex flex-wrap gap-x-12 gap-y-3 border-y py-4"
-        style={{ borderColor: 'var(--bronze-faint)' }}
-      >
-        <div>
-          <p className="font-body text-[11px] uppercase tracking-[0.08em] text-parchment">
+      <div className="tablet mt-4 flex flex-wrap items-stretch">
+        <div
+          className="border-r px-5 py-4 sm:px-7"
+          style={{ borderColor: 'var(--bronze-ghost, rgba(138,111,63,0.14))' }}
+        >
+          <p className="font-body text-[10px] tracking-[0.14em] text-parchment uppercase">
             Gross freed compute
           </p>
-          <p className="font-display text-3xl text-bone">{fmtUsd(data?.gross_recovered_usd)}</p>
+          <p className="mt-1 font-display text-3xl font-medium text-bone">
+            {fmtUsd(data?.gross_recovered_usd)}
+          </p>
         </div>
-        <div>
-          <p className="font-body text-[11px] uppercase tracking-[0.08em] text-parchment">
+        <div
+          className="border-r px-5 py-4 sm:px-7"
+          style={{ borderColor: 'var(--bronze-ghost, rgba(138,111,63,0.14))' }}
+        >
+          <p className="font-body text-[10px] tracking-[0.14em] text-parchment uppercase">
             Expected value, forecast-weighted
           </p>
-          <p className="font-display text-3xl text-bone">{fmtUsd(data?.expected_recovered_usd)}</p>
+          <p className="mt-1 font-display text-3xl font-medium text-bone">
+            {fmtUsd(data?.expected_recovered_usd)}
+          </p>
         </div>
-        <p className="max-w-xs self-end font-body text-[11px] text-parchment">
+        <p className="max-w-xs self-center px-5 py-4 font-body text-[11px] leading-relaxed text-parchment sm:px-7">
           Gross prices the wall-clock budget a kill freed; expected discounts it by the
           probability the run was going to fail anyway.
         </p>

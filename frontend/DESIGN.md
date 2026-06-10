@@ -206,3 +206,30 @@ above:
 3. **Generic**: VitalsStrip as three "stat cards" with big numbers in boxes.
    Revision: a single hairline-bounded strip, label-above-figure in mono,
    no boxes — closer to a cockpit annunciator row.
+
+## Addendum — the bounded-and-etched pass (2026-06-09)
+
+Field problems found at extreme viewports, and the system answers:
+
+- **Stretched-viewBox SVGs scaled type grotesquely on wide screens.** All
+  instruments (TraceCanvas, ReliabilityDiagram) now render at measured pixel
+  size via `useMeasure` (ResizeObserver); fonts and stroke weights are
+  constant at any viewport.
+- **Warmup transients crushed the y-domain.** LTTB preserves extremes, so the
+  trace domain uses an IQR fence (median + 8×IQR, floored at p90) with the
+  recent tail, target, and fan quantiles always re-widening it — a divergence
+  blowup stays visible, a warmup cliff enters from off-plot.
+- **Boxes expanded infinitely.** Content is capped at 1600px and centered in
+  the shell; fleet cards mint via `auto-fill, minmax(300px, 1fr)` with a
+  460px ceiling; sparse pages (Calibration, Ledger) center as narrower
+  columns.
+- **The Analyst dock resizes.** Drag the left edge (320–640px, persisted in
+  localStorage; arrow keys on the handle; Home resets). Desktop dock is
+  sticky full-height with internal scroll — a long transcript can no longer
+  stretch the page.
+- **The etched layer.** `.tablet` (outer hairline + inset ghost hairline +
+  raking light; `.tablet-link` lifts on hover), `.rune-rule` section headers
+  (◆ + fading hairline), `.etched-rule` double hairline under page titles,
+  paper-grain + atmospheric glows on the body, thin bronze scrollbars,
+  toast slide-ins and fade-ups — all reduced-motion aware. Prognosis
+  numerals carry per-outcome meter bars (verdigris/oxblood/ochre).

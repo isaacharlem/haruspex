@@ -2,12 +2,17 @@
 
 import { useState } from 'react'
 import { EmptyState } from '../components/EmptyState'
+import { PageHeader, SectionRule } from '../components/PageHeader'
 import { RunCard } from '../components/RunCard'
 import { VitalsStrip } from '../components/VitalsStrip'
 import { useLedger, useRuns } from '../hooks/queries'
 import { bySeverity } from '../lib/status'
 
 const STATUS_FILTERS = ['ALL', 'RUNNING', 'COMPLETED', 'DIVERGED', 'KILLED', 'LOST']
+
+/* Cards never balloon: the grid mints as many 300–380px columns as fit. */
+const CARD_GRID =
+  'grid grid-cols-1 gap-3.5 sm:[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))] [&>*]:max-w-[460px]'
 
 export function FleetPage() {
   const [status, setStatus] = useState('ALL')
@@ -24,43 +29,47 @@ export function FleetPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-2xl text-bone">Fleet</h1>
-        <div className="flex gap-2">
-          <label className="sr-only" htmlFor="fleet-status">
-            Filter by status
-          </label>
-          <select
-            id="fleet-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            className="border bg-ink-well px-2 py-1 font-mono text-xs text-parchment"
-            style={{ borderColor: 'var(--bronze-faint)' }}
-          >
-            {STATUS_FILTERS.map((option) => (
-              <option key={option}>{option}</option>
-            ))}
-          </select>
-          <label className="sr-only" htmlFor="fleet-search">
-            Search runs by name
-          </label>
-          <input
-            id="fleet-search"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            className="w-44 border bg-ink-well px-2 py-1 font-mono text-xs text-bone"
-            style={{ borderColor: 'var(--bronze-faint)' }}
-            aria-label="search runs by name"
-          />
-        </div>
-      </div>
+      <PageHeader
+        title="Fleet"
+        actions={
+          <>
+            <label className="sr-only" htmlFor="fleet-status">
+              Filter by status
+            </label>
+            <select
+              id="fleet-status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="border bg-ink-well px-2 py-1.5 font-mono text-xs text-parchment transition-colors hover:border-bronze"
+              style={{ borderColor: 'var(--bronze-faint)' }}
+            >
+              {STATUS_FILTERS.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+            <label className="sr-only" htmlFor="fleet-search">
+              Search runs by name
+            </label>
+            <input
+              id="fleet-search"
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              className="w-44 border bg-ink-well px-2 py-1.5 font-mono text-xs text-bone transition-colors hover:border-bronze"
+              style={{ borderColor: 'var(--bronze-faint)' }}
+              aria-label="search runs by name"
+            />
+          </>
+        }
+      />
 
       <div className="mt-4">
         <VitalsStrip runs={runsQuery.data?.items ?? []} ledger={ledger.data} />
       </div>
 
       {runsQuery.isLoading ? (
-        <p className="mt-8 font-mono text-xs text-parchment">consulting the entrails…</p>
+        <p className="augur-shimmer mt-8 font-mono text-xs text-parchment">
+          consulting the entrails…
+        </p>
       ) : runs.length === 0 ? (
         <div className="mt-8">
           <EmptyState
@@ -71,23 +80,24 @@ export function FleetPage() {
       ) : (
         <>
           {live.length > 0 && (
-            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {live.map((run) => (
-                <RunCard key={run.id} run={run} />
-              ))}
-            </div>
+            <section aria-label="live runs" className="fade-up mt-7">
+              <SectionRule>Live</SectionRule>
+              <div className={`mt-3 ${CARD_GRID}`}>
+                {live.map((run) => (
+                  <RunCard key={run.id} run={run} />
+                ))}
+              </div>
+            </section>
           )}
           {finished.length > 0 && (
-            <>
-              <h2 className="mt-8 font-body text-[11px] font-semibold uppercase tracking-[0.08em] text-parchment">
-                Concluded
-              </h2>
-              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <section aria-label="concluded runs" className="fade-up mt-8">
+              <SectionRule>Concluded</SectionRule>
+              <div className={`mt-3 ${CARD_GRID}`}>
                 {finished.map((run) => (
                   <RunCard key={run.id} run={run} />
                 ))}
               </div>
-            </>
+            </section>
           )}
         </>
       )}

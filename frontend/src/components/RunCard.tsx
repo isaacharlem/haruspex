@@ -1,4 +1,5 @@
 // One run at a glance: name, sigil, mini trace + fan, prognosis, burn.
+// Rendered as an etched tablet that lifts on hover.
 
 import { Link } from 'react-router-dom'
 import { fmtProb, fmtRate, fmtStep } from '../lib/format'
@@ -23,18 +24,17 @@ export function RunCard({ run }: { run: Run }) {
   return (
     <Link
       to={`/runs/${run.id}`}
-      className={`block border bg-ink-raised p-3 transition-colors duration-300 hover:border-bone ${
-        terminal ? 'opacity-60' : ''
-      }`}
-      style={{ borderColor: 'var(--bronze-faint)' }}
+      className={`tablet tablet-link block p-3.5 ${terminal ? 'opacity-65 hover:opacity-90' : ''}`}
       data-testid="run-card"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="truncate font-body text-sm font-semibold text-bone">{run.name}</span>
+        <span className="truncate font-body text-sm font-semibold text-bone" title={run.name}>
+          {run.name}
+        </span>
         <StatusSigil visual={visual} />
       </div>
 
-      <div className="mt-2 h-16">
+      <div className="mt-2.5 h-16">
         <TraceCanvas
           run={run}
           points={metrics.data?.points ?? []}
@@ -44,11 +44,14 @@ export function RunCard({ run }: { run: Run }) {
         />
       </div>
 
-      <div className="mt-2 flex items-baseline justify-between font-mono text-xs">
+      <div
+        className="mt-2.5 flex items-baseline justify-between border-t pt-2 font-mono text-xs"
+        style={{ borderColor: 'var(--bronze-ghost, rgba(138,111,63,0.14))' }}
+      >
         <span className="text-parchment">
           {headline[0]} <span className="text-bone">{headline[1]}</span>
           {forecast && !forecast.calibrated && (
-            <span className="ml-1 text-[9px] uppercase tracking-wide text-bronze">~cal</span>
+            <span className="ml-1 text-[9px] tracking-wide text-bronze uppercase">~cal</span>
           )}
         </span>
         <span className="text-parchment">
@@ -59,7 +62,9 @@ export function RunCard({ run }: { run: Run }) {
         <span>
           {run.gpu_count}×{run.gpu_type}
         </span>
-        <span>{run.status === 'RUNNING' ? fmtRate(run.burn_usd_per_hour) : run.status.toLowerCase()}</span>
+        <span style={terminal ? undefined : { color: 'var(--bone)' }}>
+          {run.status === 'RUNNING' ? fmtRate(run.burn_usd_per_hour) : run.status.toLowerCase()}
+        </span>
       </div>
     </Link>
   )

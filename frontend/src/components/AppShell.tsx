@@ -1,5 +1,7 @@
-// Shell: left rail (bottom bar on small screens), content, toasts, the
-// Analyst dock. One SSE subscription lives here.
+// Shell: left rail (bottom bar on small screens), bounded content column,
+// toasts, the Analyst dock. One SSE subscription lives here. Content is
+// capped at a readable width so nothing stretches into the void on
+// ultra-wide displays.
 
 import type { ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
@@ -20,10 +22,10 @@ export function AppShell({ copilot }: { copilot?: ReactNode }) {
   const streamConnected = useUiStore((state) => state.streamConnected)
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink sm:flex-row">
+    <div className="flex min-h-screen flex-col sm:flex-row">
       <nav
         aria-label="primary"
-        className="order-last flex shrink-0 justify-around border-t sm:order-first sm:w-16 sm:flex-col sm:justify-start sm:gap-1 sm:border-t-0 sm:border-r sm:pt-3"
+        className="order-last flex shrink-0 justify-around border-t bg-ink/70 backdrop-blur-sm sm:order-first sm:w-16 sm:flex-col sm:justify-start sm:gap-1 sm:border-t-0 sm:border-r sm:pt-3"
         style={{ borderColor: 'var(--bronze-faint)' }}
       >
         <NavLink to="/" className="hidden px-2 py-3 text-center sm:block" aria-label="Haruspex home">
@@ -37,15 +39,26 @@ export function AppShell({ copilot }: { copilot?: ReactNode }) {
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-1 py-2 font-body text-[8px] uppercase tracking-wide ${
+              `relative flex flex-col items-center gap-0.5 px-1 py-2 font-body text-[8px] tracking-wide uppercase transition-colors ${
                 isActive ? 'text-bone' : 'text-parchment hover:text-bone'
               }`
             }
           >
-            <span className="text-base" aria-hidden="true">
-              {item.glyph}
-            </span>
-            {item.label}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-1 bottom-1 left-0 hidden w-0.5 sm:block"
+                    style={{ background: 'var(--bronze)' }}
+                  />
+                )}
+                <span className="text-base" aria-hidden="true">
+                  {item.glyph}
+                </span>
+                {item.label}
+              </>
+            )}
           </NavLink>
         ))}
         <span
@@ -58,7 +71,9 @@ export function AppShell({ copilot }: { copilot?: ReactNode }) {
       </nav>
 
       <main className="min-w-0 flex-1 p-4 sm:p-6">
-        <Outlet />
+        <div className="mx-auto w-full max-w-[1600px]">
+          <Outlet />
+        </div>
       </main>
 
       {copilot}

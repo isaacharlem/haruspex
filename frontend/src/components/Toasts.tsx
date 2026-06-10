@@ -23,7 +23,7 @@ export function Toasts() {
           key={toast.id}
           type="button"
           onClick={() => dismiss(toast.id)}
-          className="flex items-center gap-2 border bg-ink-raised px-3 py-2 text-left font-body text-xs text-bone shadow-lg"
+          className="toast-in flex items-center gap-2 border bg-ink-raised px-3 py-2 text-left font-body text-xs text-bone shadow-lg"
           style={{ borderColor: TONE_COLOR[toast.tone] }}
           data-testid="toast"
         >
