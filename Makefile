@@ -63,6 +63,8 @@ test: test-backend test-sdk test-frontend
 
 test-backend:
 	cd backend && uv run pytest --cov --cov-fail-under=85 -q
+	cd backend && uv run coverage report --include='*/forecaster/*' --fail-under=95 \
+		| tail -2
 
 test-sdk:
 	cd sdk && uv run pytest --cov --cov-fail-under=90 -q
