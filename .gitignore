@@ -36,3 +36,4 @@ frontend/blob-report/
 
 # Docker
 deploy/pgdata/
+examples/data/
