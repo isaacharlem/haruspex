@@ -2,7 +2,7 @@
 
 **Haruspex watches your live training runs, forecasts each one's fate with calibrated probabilities, kills the doomed ones under policy, and tells you — in dollars — what it saved.**
 
-[![ci](https://github.com/isaacmharlem/haruspex/actions/workflows/ci.yml/badge.svg)](https://github.com/isaacmharlem/haruspex/actions/workflows/ci.yml)
+[![ci](https://github.com/isaacharlem/haruspex/actions/workflows/ci.yml/badge.svg)](https://github.com/isaacharlem/haruspex/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-8A6F3F.svg)](LICENSE)
 [![python 3.12](https://img.shields.io/badge/python-3.12-4E8F7B.svg)](https://www.python.org/downloads/release/python-3120/)
 
@@ -22,7 +22,7 @@ The classic answer — ASHA/Hyperband-style early stopping — only works *insid
 ## The 90-second demo
 
 ```bash
-git clone https://github.com/isaacmharlem/haruspex && cd haruspex
+git clone https://github.com/isaacharlem/haruspex && cd haruspex
 cp .env.example .env
 make demo
 ```
