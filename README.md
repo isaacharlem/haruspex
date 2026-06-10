@@ -8,7 +8,7 @@
 
 ## The problem
 
-A meaningful fraction of expensive training runs were never going to work, and most teams find out at the end. Görmez & Yorulmaz ([arXiv:2405.18710](https://arxiv.org/abs/2405.18710)) measured that roughly one in ten LLM pretraining runs with *identical configurations* diverged on the random seed alone — failures nobody could have configured away, burning their full GPU budget unless someone was watching the loss curve at 3am. Add the runs that plateau short of target, and the wasted-compute share of a training budget gets uncomfortable.
+A meaningful fraction of expensive training runs were never going to work, and most teams find out at the end. Lee, Bae, Kim, Kwon & Lee, *To FP8 and Back Again: Quantifying Reduced Precision Effects on LLM Training Stability* ([arXiv:2405.18710](https://arxiv.org/abs/2405.18710)), measured that 18 of 188 otherwise-identical BF16 LLM training runs — roughly one in ten — diverged on the random seed alone (and suspect that undercounts, since they stopped early). Failures nobody could have configured away, burning their full GPU budget unless someone was watching the loss curve at 3am. Add the runs that plateau short of target, and the wasted-compute share of a training budget gets uncomfortable.
 
 The classic answer — ASHA/Hyperband-style early stopping — only works *inside* a hyperparameter sweep: it prunes a trial because sibling trials with the same budget are doing better. A lone pretraining run, a finetune, the one big run that matters most, has no siblings to compare against. Pruning it requires a forecast of its own future, not a leaderboard — which is exactly the part ASHA never had.
 
