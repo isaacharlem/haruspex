@@ -16,6 +16,7 @@ from haruspex_server.forecaster.calibration import (
     IsotonicParams,
     brier_score,
     fit_isotonic,
+    reliability_bins,
 )
 
 TRAIN_PROGRESS_POINTS = (0.25, 0.5, 0.75)
@@ -96,6 +97,32 @@ async def collect_training_pairs(
             np.asarray(div_outcomes, dtype=np.float64),
         ),
     }
+
+
+async def calibration_summary(session: AsyncSession) -> list[dict[str, object]]:
+    """Per-outcome reliability bins + Brier scores for the calibration page."""
+    pairs = await collect_training_pairs(session)
+    summaries: list[dict[str, object]] = []
+    for outcome, (scores, outcomes) in pairs.items():
+        model = await session.scalar(
+            select(CalibrationModel)
+            .where(CalibrationModel.outcome == outcome)
+            .order_by(CalibrationModel.id.desc())
+            .limit(1)
+        )
+        n = len(scores)
+        summaries.append(
+            {
+                "outcome": outcome.value,
+                "n_samples": n,
+                "calibrated": model is not None and model.n_samples >= MIN_SAMPLES,
+                "brier_raw": brier_score(scores, outcomes) if n else None,
+                "brier_calibrated": model.brier_after if model is not None else None,
+                "fitted_at": model.fitted_at if model is not None else None,
+                "bins": reliability_bins(scores, outcomes) if n else [],
+            }
+        )
+    return summaries
 
 
 async def refit_calibration(session: AsyncSession) -> list[CalibrationModel]:

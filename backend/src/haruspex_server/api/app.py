@@ -15,6 +15,7 @@ from haruspex_server.api.routers import (
     events,
     health,
     ingest,
+    ledger,
     policies,
     runs,
     stream,
@@ -79,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(runs.router)
     v1.include_router(ingest.router)
     v1.include_router(policies.router)
+    v1.include_router(ledger.router)
     v1.include_router(events.router)
     v1.include_router(admin_keys.router)
     v1.include_router(stream.router)
