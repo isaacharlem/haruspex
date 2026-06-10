@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { ConnectGate } from './components/ConnectGate'
+import { CopilotPanel } from './components/CopilotPanel'
 import { CalibrationPage } from './pages/CalibrationPage'
 import { FleetPage } from './pages/FleetPage'
 import { KeysPage } from './pages/KeysPage'
@@ -28,7 +29,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route element={<AppShell />}>
+          <Route element={<AppShell copilot={<CopilotPanel />} />}>
             <Route index element={<FleetPage />} />
             <Route path="runs/:id" element={<RunDetailPage />} />
             <Route path="policies" element={<PoliciesPage />} />

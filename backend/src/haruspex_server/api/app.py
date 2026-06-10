@@ -12,6 +12,7 @@ from haruspex_server.api.middleware import RequestContextMiddleware
 from haruspex_server.api.ratelimit import RateLimiter
 from haruspex_server.api.routers import (
     admin_keys,
+    copilot,
     events,
     health,
     ingest,
@@ -83,6 +84,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(ledger.router)
     v1.include_router(events.router)
     v1.include_router(admin_keys.router)
+    v1.include_router(copilot.router)
     v1.include_router(stream.router)
     app.include_router(v1)
     app.include_router(health.router)
