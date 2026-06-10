@@ -4,9 +4,12 @@
    Everything derives from these variables; see frontend/DESIGN.md. */
 :root {
   --ink: #14110c;
+  --ink-raised: #1b1712;
+  --ink-well: #0f0c08;
   --bone: #e9e3d3;
   --parchment: #b9af99;
   --bronze: #8a6f3f;
+  --bronze-faint: rgba(138, 111, 63, 0.35);
   --verdigris: #4e8f7b;
   --ochre: #c9912e;
   --oxblood: #a23b2e;
@@ -14,9 +17,12 @@
 
 @theme {
   --color-ink: #14110c;
+  --color-ink-raised: #1b1712;
+  --color-ink-well: #0f0c08;
   --color-bone: #e9e3d3;
   --color-parchment: #b9af99;
   --color-bronze: #8a6f3f;
+  --color-bronze-faint: rgba(138, 111, 63, 0.35);
   --color-verdigris: #4e8f7b;
   --color-ochre: #c9912e;
   --color-oxblood: #a23b2e;
@@ -29,4 +35,42 @@ html {
   background-color: var(--ink);
   color: var(--bone);
   font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 14px;
+}
+
+/* All numbers are data: tabular always. */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible 2px bone focus ring on every interactive element. */
+:focus-visible {
+  outline: 2px solid var(--bone);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--bronze);
+  color: var(--ink);
+}
+
+@keyframes comet-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.comet-halo {
+  animation: comet-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comet-halo {
+    animation: none;
+    opacity: 0.8;
+  }
 }

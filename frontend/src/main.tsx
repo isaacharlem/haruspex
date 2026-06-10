@@ -1,4 +1,4 @@
-import '@fontsource-variable/fraunces'
+import '@fontsource-variable/fraunces/index.css'
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/500.css'
 import '@fontsource/ibm-plex-sans/400.css'

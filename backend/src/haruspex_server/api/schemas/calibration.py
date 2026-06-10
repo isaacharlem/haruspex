@@ -13,6 +13,12 @@ class ReliabilityBin(BaseModel):
     observed_rate: float
 
 
+class CalibrationFitPoint(BaseModel):
+    fitted_at: datetime
+    brier_after: float | None
+    n_samples: int
+
+
 class OutcomeCalibration(BaseModel):
     outcome: str
     n_samples: int
@@ -21,6 +27,7 @@ class OutcomeCalibration(BaseModel):
     brier_calibrated: float | None
     fitted_at: datetime | None
     bins: list[ReliabilityBin]
+    history: list[CalibrationFitPoint] = []
 
 
 class CalibrationOut(BaseModel):

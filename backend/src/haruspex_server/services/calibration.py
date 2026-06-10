@@ -104,12 +104,15 @@ async def calibration_summary(session: AsyncSession) -> list[dict[str, object]]:
     pairs = await collect_training_pairs(session)
     summaries: list[dict[str, object]] = []
     for outcome, (scores, outcomes) in pairs.items():
-        model = await session.scalar(
-            select(CalibrationModel)
-            .where(CalibrationModel.outcome == outcome)
-            .order_by(CalibrationModel.id.desc())
-            .limit(1)
+        history = list(
+            await session.scalars(
+                select(CalibrationModel)
+                .where(CalibrationModel.outcome == outcome)
+                .order_by(CalibrationModel.id.desc())
+                .limit(20)
+            )
         )
+        model = history[0] if history else None
         n = len(scores)
         summaries.append(
             {
@@ -120,6 +123,14 @@ async def calibration_summary(session: AsyncSession) -> list[dict[str, object]]:
                 "brier_calibrated": model.brier_after if model is not None else None,
                 "fitted_at": model.fitted_at if model is not None else None,
                 "bins": reliability_bins(scores, outcomes) if n else [],
+                "history": [
+                    {
+                        "fitted_at": row.fitted_at,
+                        "brier_after": row.brier_after,
+                        "n_samples": row.n_samples,
+                    }
+                    for row in reversed(history)
+                ],
             }
         )
     return summaries
