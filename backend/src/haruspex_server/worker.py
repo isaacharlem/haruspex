@@ -18,6 +18,7 @@ separate process/container. Each cycle:
 import asyncio
 import contextlib
 import signal
+import sys
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -58,7 +59,10 @@ from haruspex_server.services.runs import issue_kill
 logger = structlog.get_logger("haruspex.worker")
 
 RETROSPECTIVE_GRID = (0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9)
-RETROSPECTIVE_RUNS_PER_CYCLE = 20
+# Kept small so historical backfill (11 grid forecasts per run) never starves
+# live refits within a cycle — on a 2-core host, 20 runs/cycle meant minutes
+# between live forecasts and kills arrived too late.
+RETROSPECTIVE_RUNS_PER_CYCLE = 3
 RETROSPECTIVE_BOOTSTRAP_N = 300
 CALIBRATION_REFIT_DELTA = 5
 TERMINAL = (RunStatus.COMPLETED, RunStatus.DIVERGED, RunStatus.KILLED)
@@ -324,8 +328,8 @@ async def main() -> None:
     stop = asyncio.Event()
 
     loop = asyncio.get_running_loop()
-    for sig in (signal.SIGTERM, signal.SIGINT):
-        with contextlib.suppress(NotImplementedError):
+    if sys.platform != "win32":  # add_signal_handler is POSIX-only
+        for sig in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(sig, stop.set)
 
     async with sessionmaker() as session:

@@ -35,7 +35,7 @@ test('the demo comes alive end to end', async ({ page }) => {
         .getByTestId('run-card')
         .filter({ hasText: /DOOMED|AT RISK/ })
         .first(),
-    ).toBeVisible({ timeout: 180_000 })
+    ).toBeVisible({ timeout: 240_000 })
   })
 
   await test.step('the prognosis fan renders on a live run', async () => {

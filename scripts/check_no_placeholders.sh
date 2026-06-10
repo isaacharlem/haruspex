@@ -18,21 +18,39 @@ elif [[ -s "$allowlist" ]]; then
   fail=1
 fi
 
-# Test files are excluded from every check below.
-test_globs=(--glob '!**/*.test.*' --glob '!**/*.spec.*' --glob '!**/tests/**' --glob '!**/__tests__/**' --glob '!**/test/**')
+# Both engines exit 0 on match, 1 on no-match, 2+ on error. Errors must never
+# read as "clean" (a missing binary once silently passed this audit), so scan()
+# maps them to the FAIL branch. Test files are excluded from every check.
+scan() {
+  local status=0
+  if command -v rg > /dev/null 2>&1; then
+    rg --ignore-case --line-number \
+      --glob '!**/*.test.*' --glob '!**/*.spec.*' --glob '!**/tests/**' \
+      --glob '!**/__tests__/**' --glob '!**/test/**' "$@" || status=$?
+  else
+    grep -riEn \
+      --exclude='*.test.*' --exclude='*.spec.*' --exclude-dir=tests \
+      --exclude-dir=__tests__ --exclude-dir=test "$@" || status=$?
+  fi
+  if [[ "$status" -ne 0 && "$status" -ne 1 ]]; then
+    echo "FAIL: the audit scan errored (exit $status)"
+    return 0 # "found" — forces the FAIL branch
+  fi
+  return "$status"
+}
 
 pattern='TODO|FIXME|XXX|NotImplementedError|not implemented|lorem ipsum|placeholder|YOUR_|<your'
-if rg --ignore-case --line-number "${test_globs[@]}" "$pattern" backend/src sdk/src frontend/src 2>/dev/null; then
+if scan "$pattern" backend/src sdk/src frontend/src; then
   echo "FAIL: placeholder markers found in product code (patterns: $pattern)"
   fail=1
 fi
 
-if rg --line-number "${test_globs[@]}" '\bprint\(' backend/src sdk/src 2>/dev/null; then
+if scan '\bprint\(' backend/src sdk/src; then
   echo "FAIL: print( found in Python product code — use structlog (backend) or logging (sdk)"
   fail=1
 fi
 
-if rg --line-number "${test_globs[@]}" 'console\.log' frontend/src 2>/dev/null; then
+if scan 'console\.log' frontend/src; then
   echo "FAIL: console.log found in frontend product code"
   fail=1
 fi
