@@ -10,7 +10,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from haruspex_server import __version__
 from haruspex_server.api.middleware import RequestContextMiddleware
 from haruspex_server.api.ratelimit import RateLimiter
-from haruspex_server.api.routers import admin_keys, events, health, ingest, runs, stream
+from haruspex_server.api.routers import (
+    admin_keys,
+    events,
+    health,
+    ingest,
+    policies,
+    runs,
+    stream,
+)
 from haruspex_server.core.config import Settings, get_settings
 from haruspex_server.core.errors import register_error_handlers
 from haruspex_server.core.logging import configure_logging
@@ -70,6 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1 = APIRouter(prefix="/v1")
     v1.include_router(runs.router)
     v1.include_router(ingest.router)
+    v1.include_router(policies.router)
     v1.include_router(events.router)
     v1.include_router(admin_keys.router)
     v1.include_router(stream.router)
