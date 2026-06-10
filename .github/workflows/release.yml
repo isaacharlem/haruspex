@@ -16,7 +16,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build api image
         run: docker build -f deploy/Dockerfile.backend --target api -t haruspex-api:${{ github.ref_name }} .
       - name: Build worker image
@@ -27,7 +27,7 @@ jobs:
   sdk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v5
       - name: Build wheel and sdist
         run: uv build --package haruspex --out-dir dist
